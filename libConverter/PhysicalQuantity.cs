@@ -6,31 +6,7 @@ using System;
 namespace libUnitConverter {
     public class PhysicalQuantity
     {
-        #region Global variable for each unit
-        protected double _value;
-        protected string _unit;
-        protected string _physicalQty;
-        #endregion
-
         #region Get/Set
-        public double Value {
-            get {
-                return _value;
-            }
-            set{
-                _value = value;
-            }
-        }
-
-        public string Unit {
-            get {
-                return _unit;
-            }
-            set {
-                _unit = value;
-            }
-        }
-
         public List<string> PressureUnits {
             get {
                 return new List<string>(_pressureUnitTable.Keys);
@@ -178,10 +154,6 @@ namespace libUnitConverter {
         #endregion
 
         #region Converter himself
-        public double convertTo(string newUnit) {
-            return this.convertUnit(Value,Unit,newUnit);
-        }
-
         /// <summary>
         /// Convert a value from one unit to another
         /// </summary>

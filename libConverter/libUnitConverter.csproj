@@ -48,6 +48,7 @@
     <Compile Include="About.Designer.cs">
       <DependentUpon>About.cs</DependentUpon>
     </Compile>
+    <Compile Include="APhysicalQuantity.cs" />
     <Compile Include="PhysicalQuantity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
