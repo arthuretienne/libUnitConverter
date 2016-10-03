@@ -93,15 +93,6 @@ namespace libUnitConverter {
         public PhysicalQuantity() {
             InitializeCombinedUnits();
         }
-
-        public PhysicalQuantity(double value,string unit) {
-            Value = value;
-            Unit = unit;
-
-            InitializeCombinedUnits();
-            _physicalQty = determinePhysicalQuantity(Unit);
-        }
-
         private void InitializeCombinedUnits() {
             //volumeFlow = Volume units / time unit
             foreach (string volumeKey in _volumeUnitTable.Keys) {
@@ -263,7 +254,6 @@ namespace libUnitConverter {
         public List<string> checkMyListOfUnit(List<string> myList,string forPhysicalQty) {
             if (allowedPhysicalQuantity.Contains(forPhysicalQty)) {
                 
-                //string methodName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(forPhysicalQty) + "Units";
                 string methodName = forPhysicalQty.Substring(0,1).ToUpper() + forPhysicalQty.Substring(1) + "Units";
 
                 PropertyInfo pi = this.GetType().GetProperty(methodName,BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
@@ -294,7 +284,7 @@ namespace libUnitConverter {
 
             if ( allowedPhysicalQuantity.Contains( forPhysicalQty ) ) {
                 
-                string methodName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(forPhysicalQty) + "Units";
+                string methodName = forPhysicalQty.Substring(0,1).ToUpper() + forPhysicalQty.Substring(1) + "Units";
 
                 PropertyInfo pi = this.GetType().GetProperty(methodName,BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
 
