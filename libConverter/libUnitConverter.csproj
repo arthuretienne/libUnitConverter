@@ -7,8 +7,8 @@
     <ProjectGuid>{D235FB17-9DF4-43CD-AB30-21EB54C249EF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>libConverter</RootNamespace>
-    <AssemblyName>libConverter</AssemblyName>
+    <RootNamespace>libUnitConverter</RootNamespace>
+    <AssemblyName>libUnitConverter</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

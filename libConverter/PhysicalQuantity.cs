@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Data;
 using System.Globalization;
 
-namespace libConverter {
+namespace libUnitConverter {
     public class PhysicalQuantity
     {
         #region Global variable for each unit
