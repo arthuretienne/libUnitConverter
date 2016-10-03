@@ -12,10 +12,11 @@ namespace libConverter {
                 return _unit;
             }
             set {
-                if ( PQ.checkMyUnit( value ) )
+                if ( PQ.checkMyUnit(value) ) {
                     _unit = value;
-                else
-                    throw new System.Exception();
+                } else {
+                    throw new System.Exception("Not supported unit");
+                }
             }
         }
         
