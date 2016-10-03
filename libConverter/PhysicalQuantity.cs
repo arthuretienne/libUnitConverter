@@ -282,6 +282,34 @@ namespace libUnitConverter {
 
             return myList;
         }
+
+        /// <summary>
+        /// Check if your unit is supported by the converter
+        /// </summary>
+        /// <param name="unit">Your unit to check</param>
+        /// <param name="forPhysicalQty">What kind of unit it is (pressure, temperature, flowrate, ...)</param>
+        /// <returns></returns>
+        public bool checkMyUnit(string unit) {
+            string forPhysicalQty = determinePhysicalQuantity( unit );
+
+            if ( allowedPhysicalQuantity.Contains( forPhysicalQty ) ) {
+                
+                string methodName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(forPhysicalQty) + "Units";
+
+                PropertyInfo pi = this.GetType().GetProperty(methodName,BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
+
+                List<string> knownUnits = (List<string>) pi.GetValue(this);
+
+                if (knownUnits.Contains(unit)) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            } else {
+                return false;
+            }
+        }
         #endregion
     }
 }

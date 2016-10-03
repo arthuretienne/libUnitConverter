@@ -2,14 +2,23 @@
 namespace libConverter {
     public class APhysicalQuantity {
 
-        private double _value;
+        private PhysicalQuantity PQ = new PhysicalQuantity();
+        
         private string _unit;
         
         public double Value { get; set; }
-        public string Unit { get; set; }
-
-        private PhysicalQuantity PQ = new PhysicalQuantity();
-
+        public string Unit {
+            get {
+                return _unit;
+            }
+            set {
+                if ( PQ.checkMyUnit( value ) )
+                    _unit = value;
+                else
+                    throw new System.Exception();
+            }
+        }
+        
         /// <summary>
         /// Get a converted value from actual unit to newUnit
         /// </summary>
