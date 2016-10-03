@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using System.Data;
-using System.Globalization;
+using System;
 
 namespace libUnitConverter {
     public class PhysicalQuantity
@@ -51,11 +51,17 @@ namespace libUnitConverter {
                 return new List<string>(_volumeUnitTable.Keys);
             }
         }
+
+        public List<string> VolumeFlowUnits {
+            get {
+                return _volumeFlowUnitTable;
+            }
+        }
         #endregion
 
         #region Convert Table
         private static readonly List<string> allowedPhysicalQuantity = new List<string> {
-            "volume","temperature","pressure","time"
+            "volume","temperature","pressure","time","volumeFlow","massFlow"
         };
 
         private static readonly Dictionary<string,string> _pressureUnitTable = new Dictionary<string,string>
@@ -103,20 +109,31 @@ namespace libUnitConverter {
                                     }
             }
         };
+
+        private List<string> _volumeFlowUnitTable = new List<string>();
         #endregion
 
         #region Class constructors
         public PhysicalQuantity() {
-
+            InitializeCombinedUnits();
         }
 
         public PhysicalQuantity(double value,string unit) {
             Value = value;
             Unit = unit;
 
+            InitializeCombinedUnits();
             _physicalQty = determinePhysicalQuantity(Unit);
         }
 
+        private void InitializeCombinedUnits() {
+            //volumeFlow = Volume units / time unit
+            foreach (string volumeKey in _volumeUnitTable.Keys) {
+                foreach (string timeKey in _timeUnitTable.Keys) {
+                    _volumeFlowUnitTable.Add(volumeKey + "/" + timeKey);
+                }
+            }
+        }
         #endregion
 
         /// <summary>
@@ -133,6 +150,8 @@ namespace libUnitConverter {
                 return "volume";
             } else if (_temperatureUnitTable.ContainsKey(whichUnit)) {
                 return "temperature";
+            } else if (_volumeFlowUnitTable.Contains(whichUnit)) {
+                return "volumeFlow";
             }
             else {
                 return "unknown";
@@ -140,7 +159,7 @@ namespace libUnitConverter {
         }
 
         #region Coefficients functions
-        private static string pressureCoefficient(string forUnit,bool reverse) {
+        private string pressureCoefficient(string forUnit,bool reverse) {
             return _pressureUnitTable[forUnit];
         }
         private string timeCoefficient(string forUnit,bool reverse) {
@@ -178,50 +197,87 @@ namespace libUnitConverter {
                 //Can't convert from carrots to potatoes...
                 if (determinePhysicalQuantity(fromUnit) == determinePhysicalQuantity(toUnit)) {
 
-                    DataTable dt = new DataTable();
-                    string methodName = determinePhysicalQuantity(fromUnit) + "Coefficient";
+                    //Contains divided units, split string
+                    // Do conversion of each single unit on numerator
+                    // Invert (1/x)
+                    // Do conversion of each unit in denominator
+                    // It's OK
+                    fromUnit =  "bar.°C." + fromUnit;
+                    toUnit = "mbar.K." + toUnit;
+                    if (fromUnit.IndexOf("/") > 0) {
+                        string[] divSeparator = new string[] { "/" };
+                        string[] multSeparator = new string[] { "." };
+                        string[] fromDivUnits = fromUnit.Split(divSeparator,StringSplitOptions.None);
+                        string[] toDivUnits = toUnit.Split(divSeparator,StringSplitOptions.None);
 
-                    //try {
+                        for (int i = 0; i <= fromDivUnits.GetUpperBound(0); i++) {
 
-                        MethodInfo mi = this.GetType().GetMethod(methodName,BindingFlags.NonPublic | BindingFlags.Instance);
-                        double valueInRefUnit;
-                        double valueInTargetUnit;
+                            string[] fromMultUnits = fromDivUnits[i].Split(multSeparator,StringSplitOptions.None);
+                            string[] toMultUnits = toDivUnits[i].Split(multSeparator,StringSplitOptions.None);
+                            
+                            for (int j = 0; j <= fromMultUnits.GetUpperBound(0); j++) {
+                                value = unitConverter(value,fromMultUnits[j],toMultUnits[j]);
+                            }
 
-                        //If expression not starting by "=" then do a multiplication, else compute that !
-                        string firstCoef = mi.Invoke(this,new object[] { fromUnit,false }).ToString();
-                        if (firstCoef.IndexOf("=") >= 0) {
-                            firstCoef = firstCoef.Replace("{x}", value.ToString());
-                            firstCoef = firstCoef.Replace("=","");
-                            firstCoef = firstCoef.Replace(",",".");
+                            value = 1 / value;
 
-                            valueInRefUnit = double.Parse(dt.Compute(firstCoef.ToString(),"").ToString());
-                        } else {
-                            valueInRefUnit = value * double.Parse(mi.Invoke(this, new object[] { fromUnit,false }).ToString().Replace(".",","));
                         }
 
-                        string secondCoef = mi.Invoke(this,new object[] { toUnit,true }).ToString();
-                        if (secondCoef.IndexOf("=") >= 0) {
-                            secondCoef = secondCoef.Replace("{x}",valueInRefUnit.ToString());
-                            secondCoef = secondCoef.Replace("=","");
-                            secondCoef = secondCoef.Replace(",",".");
+                        return value;
+                    } else if (fromUnit.IndexOf(".") > 0) {
+                        //Only mutliplied units
+                        return -2;
+                    } else {
+                        return unitConverter(value,fromUnit,toUnit);
+                    }
 
-                            valueInTargetUnit = double.Parse(dt.Compute(secondCoef,null).ToString());
-                        } else {
-                            valueInTargetUnit = valueInRefUnit / double.Parse(mi.Invoke(this,new object[] { toUnit,true }).ToString().Replace(".",","));
-                        }
-
-                        dt.Dispose();
-                        return valueInTargetUnit;
-
-                //} catch (Exception ex) {
-                //    System.Windows.Forms.MessageBox.Show(ex.Message,"Error",System.Windows.Forms.MessageBoxButtons.OK,System.Windows.Forms.MessageBoxIcon.Error);
-                //    return -1;
-                //}
-
-            } else {
+                } else {
                     return -1;
                 }
             }
+        }
+
+        private double unitConverter(double value, string fromUnit, string toUnit) {
+
+            DataTable dt = new DataTable();
+            string methodName = determinePhysicalQuantity(fromUnit) + "Coefficient";
+
+            //try {
+
+                MethodInfo mi = this.GetType().GetMethod(methodName,BindingFlags.NonPublic | BindingFlags.Instance);
+                double valueInRefUnit;
+                double valueInTargetUnit;
+
+                //If expression not starting by "=" then do a multiplication, else compute that !
+                string firstCoef = mi.Invoke(this,new object[] { fromUnit,false }).ToString();
+                if (firstCoef.IndexOf("=") >= 0) {
+                    firstCoef = firstCoef.Replace("{x}",value.ToString());
+                    firstCoef = firstCoef.Replace("=","");
+                    firstCoef = firstCoef.Replace(",",".");
+
+                    valueInRefUnit = double.Parse(dt.Compute(firstCoef.ToString(),"").ToString());
+                } else {
+                    valueInRefUnit = value * double.Parse(mi.Invoke(this,new object[] { fromUnit,false }).ToString().Replace(".",","));
+                }
+
+                string secondCoef = mi.Invoke(this,new object[] { toUnit,true }).ToString();
+                if (secondCoef.IndexOf("=") >= 0) {
+                    secondCoef = secondCoef.Replace("{x}",valueInRefUnit.ToString());
+                    secondCoef = secondCoef.Replace("=","");
+                    secondCoef = secondCoef.Replace(",",".");
+
+                    valueInTargetUnit = double.Parse(dt.Compute(secondCoef,null).ToString());
+                } else {
+                    valueInTargetUnit = valueInRefUnit / double.Parse(mi.Invoke(this,new object[] { toUnit,true }).ToString().Replace(".",","));
+                }
+
+                dt.Dispose();
+                return valueInTargetUnit;
+
+            //} catch (Exception ex) {
+            //    System.Windows.Forms.MessageBox.Show(ex.Message,"Error",System.Windows.Forms.MessageBoxButtons.OK,System.Windows.Forms.MessageBoxIcon.Error);
+            //    return -1;
+            //}
         }
         #endregion
 
@@ -234,9 +290,9 @@ namespace libUnitConverter {
         /// <returns></returns>
         public List<string> checkMyListOfUnit(List<string> myList,string forPhysicalQty) {
             if (allowedPhysicalQuantity.Contains(forPhysicalQty)) {
-
-                //string methodName = forPhysicalQty.ToUpper(System.Globalization.CultureInfo.CurrentCulture) + "Units";
-                string methodName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(forPhysicalQty) + "Units";
+                
+                //string methodName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(forPhysicalQty) + "Units";
+                string methodName = forPhysicalQty.Substring(0,1).ToUpper() + forPhysicalQty.Substring(1) + "Units";
 
                 PropertyInfo pi = this.GetType().GetProperty(methodName,BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
 
