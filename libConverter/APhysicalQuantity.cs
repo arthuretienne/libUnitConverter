@@ -15,7 +15,7 @@ namespace libUnitConverter {
                 if ( PQ.checkMyUnit(value) ) {
                     _unit = value;
                 } else {
-                    throw new System.Exception("Not supported unit");
+                    throw new System.Exception("Not supported unit : " + _unit);
                 }
             }
         }
