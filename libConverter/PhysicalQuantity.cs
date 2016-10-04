@@ -165,8 +165,6 @@ namespace libUnitConverter {
                     // Invert (1/x)
                     // Do conversion of each unit in denominator
                     // It's OK
-                    fromUnit =  "bar.°C." + fromUnit;
-                    toUnit = "mbar.K." + toUnit;
                     if (fromUnit.IndexOf("/") > 0) {
                         string[] divSeparator = new string[] { "/" };
                         string[] multSeparator = new string[] { "." };
@@ -188,7 +186,7 @@ namespace libUnitConverter {
 
                         return value;
                     } else if (fromUnit.IndexOf(".") > 0) {
-                        //Only mutliplied units
+                        //Only multiplied units : TO DO
                         return -2;
                     } else {
                         return unitConverter(value,fromUnit,toUnit);
