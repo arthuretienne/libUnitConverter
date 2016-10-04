@@ -1,5 +1,5 @@
 ﻿
-namespace libConverter {
+namespace libUnitConverter {
     public class APhysicalQuantity {
 
         private PhysicalQuantity PQ = new PhysicalQuantity();
