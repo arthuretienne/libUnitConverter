@@ -1,6 +1,13 @@
-﻿
+﻿using System.Runtime.InteropServices;
+
 namespace libUnitConverter {
-    public class APhysicalQuantity {
+    public interface IAPhysicalQuantity {
+        double Value { get; set; }
+        string Unit { get; set; }
+        double GetValue(string inThisUnit);
+    }
+    [ClassInterface(ClassInterfaceType.None)]
+    public class APhysicalQuantity : IAPhysicalQuantity {
 
         private PhysicalQuantity PQ = new PhysicalQuantity();
         
