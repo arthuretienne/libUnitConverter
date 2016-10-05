@@ -2,10 +2,17 @@
 using System.Reflection;
 using System.Data;
 using System;
+using System.Runtime.InteropServices;
 
 namespace libUnitConverter {
-    public class PhysicalQuantity
-    {
+    public interface IPhysicalQuantity {
+        double convertUnit(double val , string fromUnit , string toUnit);
+        bool checkMyUnit(string unitToCheck);
+    }
+
+    [ClassInterface(ClassInterfaceType.None)]
+    public class PhysicalQuantity : IPhysicalQuantity {
+
         #region Get/Set
         public List<string> PressureUnits {
             get {
